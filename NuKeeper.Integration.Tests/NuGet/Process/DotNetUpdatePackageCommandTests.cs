@@ -11,6 +11,8 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using NSubstitute;
+using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Integration.Tests.NuGet.Process
 {

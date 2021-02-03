@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using NuGet.Configuration;
@@ -6,6 +7,8 @@ using NuGet.Versioning;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.ProcessRunner;
+using NuKeeper.Inspection.Files;
+using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Update.Process
 {
@@ -13,7 +16,9 @@ namespace NuKeeper.Update.Process
     {
         private readonly IExternalProcess _externalProcess;
 
-        public DotNetUpdatePackageCommand(IExternalProcess externalProcess)
+        public DotNetUpdatePackageCommand(
+            IExternalProcess externalProcess
+        )
         {
             _externalProcess = externalProcess;
         }
@@ -40,6 +45,7 @@ namespace NuKeeper.Update.Process
             var projectFileName = currentPackage.Path.Info.Name;
             var sourceUrl = UriEscapedForArgument(packageSource.SourceUri);
             var sources = allSources.CommandLine("-s");
+            var baseDirectory = currentPackage.Path.BaseDirectory;
 
             var restoreCommand = $"restore {projectFileName} {sources}";
             await _externalProcess.Run(projectPath, "dotnet", restoreCommand, true);
@@ -51,7 +57,10 @@ namespace NuKeeper.Update.Process
             }
 
             var addCommand = $"add {projectFileName} package {currentPackage.Id} -v {newVersion} -s {sourceUrl}";
+            var restoreSolutionCommand = $"restore --force-evaluate -s {sourceUrl}";
+
             await _externalProcess.Run(projectPath, "dotnet", addCommand, true);
+            await _externalProcess.Run(baseDirectory, "dotnet", restoreSolutionCommand, true);
         }
 
         private static string UriEscapedForArgument(Uri uri)
