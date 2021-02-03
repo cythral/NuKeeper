@@ -57,7 +57,7 @@ namespace NuKeeper.Update.Process
             }
 
             var addCommand = $"add {projectFileName} package {currentPackage.Id} -v {newVersion} -s {sourceUrl}";
-            var restoreSolutionCommand = $"restore --force-evaluate -s {sourceUrl}";
+            var restoreSolutionCommand = "restore --force-evaluate";
 
             await _externalProcess.Run(projectPath, "dotnet", addCommand, true);
             await _externalProcess.Run(baseDirectory, "dotnet", restoreSolutionCommand, true);
