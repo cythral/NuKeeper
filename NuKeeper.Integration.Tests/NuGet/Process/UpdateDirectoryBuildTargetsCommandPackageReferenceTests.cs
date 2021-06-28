@@ -8,6 +8,10 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
+using NuKeeper.Update.ProcessRunner;
+
+using NSubstitute;
+
 namespace NuKeeper.Integration.Tests.NuGet.Process
 {
     [TestFixture]
@@ -52,7 +56,8 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
             var projectPath = Path.Combine(workDirectory, testFile);
             await File.WriteAllTextAsync(projectPath, projectContents);
 
-            var command = new UpdateDirectoryBuildTargetsCommand(NukeeperLogger);
+            var externalProcess = Substitute.For<IExternalProcess>();
+            var command = new UpdateDirectoryBuildTargetsCommand(externalProcess, NukeeperLogger);
 
             var package = new PackageInProject("foo", oldPackageVersion,
                 new PackagePath(workDirectory, testFile, PackageReferenceType.DirectoryBuildTargets));

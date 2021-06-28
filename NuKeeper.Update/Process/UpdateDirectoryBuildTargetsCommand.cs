@@ -10,18 +10,25 @@ using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 
+using NuKeeper.Update.ProcessRunner;
+
 namespace NuKeeper.Update.Process
 {
     public class UpdateDirectoryBuildTargetsCommand : IUpdateDirectoryBuildTargetsCommand
     {
         private readonly INuKeeperLogger _logger;
+        private readonly IExternalProcess _externalProcess;
 
-        public UpdateDirectoryBuildTargetsCommand(INuKeeperLogger logger)
+        public UpdateDirectoryBuildTargetsCommand(
+            IExternalProcess externalProcess,
+            INuKeeperLogger logger
+        )
         {
             _logger = logger;
+            _externalProcess = externalProcess;
         }
 
-        public Task Invoke(PackageInProject currentPackage, NuGetVersion newVersion, PackageSource packageSource,
+        public async Task Invoke(PackageInProject currentPackage, NuGetVersion newVersion, PackageSource packageSource,
             NuGetSources allSources)
         {
             if (currentPackage == null)
@@ -45,7 +52,9 @@ namespace NuKeeper.Update.Process
                 UpdateFile(xmlOutput, newVersion, currentPackage, xml);
             }
 
-            return Task.CompletedTask;
+            var baseDirectory = currentPackage.Path.BaseDirectory;
+            var restoreSolutionCommand = "restore --force-evaluate";
+            await _externalProcess.Run(baseDirectory, "dotnet", restoreSolutionCommand, true);
         }
 
         private void UpdateFile(Stream fileContents, NuGetVersion newVersion,
